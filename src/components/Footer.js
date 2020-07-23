@@ -10,11 +10,13 @@ function Footer() {
       <Container fluid={true}>
         <Row className="border-top justify-content-between p-3">
           <Col className="p-2" md={3} sm={12}>
-            Peter T. Walker
+            This site was created by Peter T. Walker
           </Col>
 
-          <Col className="p-0 d-flex justify-content-end" md={1}>
-            <CarouselSM></CarouselSM>
+          <Col className="p-0  justify-content-end" md={2}>
+            <Row>
+              <CarouselSM></CarouselSM>
+            </Row>
           </Col>
         </Row>
       </Container>

@@ -5,6 +5,7 @@ import Row from "react-bootstrap/Row";
 import IMG_0760 from "../assets/images/IMG_0760.jpg";
 import cowboy from "../assets/images/cowboy.jpeg";
 import eagle from "../assets/images/eagle.jpeg";
+import library from "../assets/images/library.jpg";
 
 class Carousel extends React.Component {
   constructor(props) {
@@ -13,26 +14,10 @@ class Carousel extends React.Component {
       items: [
         {
           id: 0,
-          title: "gitHub",
-          subTitle: "link to gitHub below",
-          imgSrc: IMG_0760,
-          link: "https://github.com/petertwalker",
-          selected: false,
-        },
-        {
-          id: 1,
-          title: "Linkedin",
-          subTitle: "link to Linkedin below",
-          imgSrc: cowboy,
-          link: "https://www.linkedin.com/in/petertwalker/",
-          selected: false,
-        },
-        {
-          id: 2,
-          title: "Project 3",
-          subTitle: "This link doesnt go anywhere",
-          imgSrc: eagle,
-          link: "https://petertwalker.com",
+          title: "BookApp",
+          subTitle: "follow link, enter name of author",
+          imgSrc: library,
+          link: "/bookapp",
           selected: false,
         },
       ],
@@ -77,5 +62,21 @@ class Carousel extends React.Component {
     );
   }
 }
-
+/*
+{
+          id: 0,
+          title: "gitHub",
+          subTitle: "link to gitHub below",
+          imgSrc: IMG_0760,
+          link: "https://github.com/petertwalker",
+          selected: false,
+        },
+        {
+          id: 1,
+          title: "Linkedin",
+          subTitle: "link to Linkedin below",
+          imgSrc: cowboy,
+          link: "https://www.linkedin.com/in/petertwalker/",
+          selected: false,
+        },*/
 export default Carousel;

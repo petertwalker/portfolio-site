@@ -8,6 +8,8 @@ import "./App.css";
 import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
+import BookSearch from "./pages/BookSearch";
+import BookApp from "./pages/BookApp";
 import ContactPage from "./pages/ContactPage";
 import Carousel from "./components/Carousel";
 import CarouselSM from "./components/CarouselSM";
@@ -21,6 +23,7 @@ class App extends React.Component {
         { title: "Home", path: "/" },
         { title: "About", path: "/about" },
         { title: "Contact", path: "/contact" },
+        { title: "Book Search", path: "/booksearch" },
       ],
       home: {
         title: "Hello",
@@ -32,6 +35,12 @@ class App extends React.Component {
       },
       contact: {
         title: "Get In Touch",
+      },
+      booksearch: {
+        title: "Book Search",
+      },
+      bookapp: {
+        title: "Book App",
       },
     };
   }
@@ -75,11 +84,25 @@ class App extends React.Component {
             path="/contact"
             render={() => <ContactPage title={this.state.contact.title} />}
           />
+
+          <Route
+            path="/bookapp"
+            render={() => <BookApp title={this.state.bookapp.title} />}
+          />
           <Footer></Footer>
         </Container>
       </Router>
     );
   }
 }
+/*
+<Link className="nav-link" to="/booksearch">
+                  Book Search
+                </Link>
+                
+<Route
+            path="/booksearch"
+            render={() => <BookSearch title={this.state.booksearch.title} />}
+          />*/
 
 export default App;

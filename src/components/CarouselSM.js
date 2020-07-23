@@ -5,6 +5,7 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import github from "../assets/images/github.svg";
 import linkedin from "../assets/images/linkedin.png";
+import handshake from "../assets/images/handshake.png";
 
 class CarouselSM extends React.Component {
   constructor(props) {
@@ -20,6 +21,11 @@ class CarouselSM extends React.Component {
           id: 1,
           imgSrc: linkedin,
           link: "https://www.linkedin.com/in/petertwalker/",
+        },
+        {
+          id: 2,
+          imgSrc: handshake,
+          link: "https://umass.joinhandshake.com/users/7537283",
         },
       ],
     };
