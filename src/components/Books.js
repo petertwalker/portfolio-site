@@ -11,35 +11,84 @@ class Books extends React.Component {
       books: [],
       searchField: "",
       apiKey: "AIzaSyDt5mXFwvWgydKIRaJuWccj2yKB8VtXCms",
-      sort: "Newest",
       authors: [],
-      height: -1,
+      height: 99,
     };
   }
 
   searchBook = (event) => {
     event.preventDefault();
-    this.state.authors = [];
-    axios
-      .get(
-        "https://www.googleapis.com/books/v1/volumes?q=" +
-          this.state.searchField +
-          "&key=" +
-          this.state.apiKey
-      )
-      .then((data) => {
-        const cleanData = this.cleanData(data.data.items);
-        const filterAuthor = this.filterAuthor(cleanData);
-        if (this.state.height == -1) {
-          this.setState({ books: filterAuthor });
-        } else {
-          const filterHeight = this.filterHeight(filterAuthor);
+    let req = `https://www.googleapis.com/books/v1/volumes?q= ${this.state.searchField} &key= ${this.state.apiKey} &orderBy=newest&maxResults=40`;
+    axios.get(req).then((data) => {
+      console.log(data.data.items);
+      //fill in missing attributes
+      const cleanData = this.cleanData(data.data.items);
+      //filter books for specific author
+      const filterAuthor = this.filterAuthor(cleanData);
+      //only english
+      const filterLanguage = this.filterLanguage(filterAuthor);
 
-          console.log(this.state.books);
-          this.setState({ books: filterHeight });
-          console.log(this.state.books);
-        }
+      console.log(filterLanguage);
+
+      Promise.all(this.addHeight(filterLanguage)).then((data) => {
+        const filterHeight = this.filterHeight(data);
+
+        const removeDuplicates = this.removeDuplicates(filterHeight);
+
+        console.log(`this is removeDuplicates: ${removeDuplicates}`);
+
+        this.setState({ books: removeDuplicates });
       });
+    });
+  };
+
+  removeDuplicates = (data) => {
+    let removeDuplicates = [];
+    let bookTitles = [];
+
+    //for each book
+    for (var bookIndexFirst in data) {
+      let book = data[bookIndexFirst];
+      //if bookTitles includes this title then we know the shortest book is already pushed to removeDuplicates
+      if (!bookTitles.includes(book.volumeInfo.title)) {
+        //push shortest book of same title
+        for (var bookIndexSecond in data) {
+          if (
+            book.volumeInfo.title === data[bookIndexSecond].volumeInfo.title &&
+            data[bookIndexSecond].height < book.height
+          ) {
+            book = data[bookIndexSecond];
+          }
+        }
+        bookTitles.push(book.volumeInfo.title);
+        removeDuplicates.push(book);
+      }
+    }
+
+    return removeDuplicates;
+  };
+
+  addHeight = (data) => {
+    const addHeight = data.map(async (book) => {
+      return axios
+        .get(
+          "https://www.googleapis.com/books/v1/volumes/" +
+            book.id +
+            "?key=" +
+            this.state.apiKey
+        )
+        .then((data) => {
+          if (data.data.volumeInfo?.dimensions) {
+            book["height"] = (
+              data.data.volumeInfo.dimensions.height.split(" ")[0] / 2.54
+            ).toFixed(2); //convert cm to in
+          } else {
+            book["height"] = "999";
+          }
+          return book;
+        });
+    });
+    return addHeight;
   };
 
   cleanData = (data) => {
@@ -59,7 +108,7 @@ class Books extends React.Component {
       //if data.authors is an array
       for (var key in book.volumeInfo.authors) {
         if (
-          book.volumeInfo.authors[key].toLowerCase() ==
+          book.volumeInfo.authors[key].toLowerCase() ===
           this.state.searchField.toLowerCase()
         ) {
           return true;
@@ -74,42 +123,30 @@ class Books extends React.Component {
     return filterAuthor;
   };
 
-  filterHeight = (data) => {
-    const filterHeight = data.filter(this.filterHeightFunction);
-    return filterHeight;
+  filterLanguage = (data) => {
+    const filterLanguage = data.filter((book) => {
+      return book.volumeInfo.language === "en";
+    });
+    return filterLanguage;
   };
 
-  filterHeightFunction = async (book) => {
-    await axios
-      .get(
-        "https://www.googleapis.com/books/v1/volumes/" +
-          book.id +
-          "?key=" +
-          this.state.apiKey
-      )
-      .then((data) => {
-        if (data.data.volumeInfo.hasOwnProperty("dimensions")) {
-          console.log(
-            book.volumeInfo.title +
-              " has a height of " +
-              data.data.volumeInfo.dimensions.height
-          );
-          console.log(
-            data.data.volumeInfo.dimensions.height <= this.state.height
-          );
-          return data.data.volumeInfo.dimensions.height <= this.state.height;
-        }
-        console.log(book.volumeInfo.title + " doesnt have a height ");
-        return false;
-      });
+  //takes an array of books and filters out books with height greater than state.height
+  filterHeight = (data) => {
+    const filterHeight = data.filter((book) => {
+      console.log(
+        `${parseInt(book.height, 10)} < ${this.state.height}:  ${
+          parseInt(book.height, 10) < this.state.height
+        }`
+      );
+
+      return parseInt(book.height, 10) < this.state.height;
+    });
+    console.log(filterHeight);
+    return filterHeight;
   };
 
   handleSearch = (event) => {
     this.setState({ searchField: event.target.value });
-  };
-
-  handleSort = (event) => {
-    this.setState({ sort: event.target.value });
   };
 
   handleHeight = (event) => {
@@ -117,84 +154,15 @@ class Books extends React.Component {
   };
 
   render() {
-    let sortedBooks = [];
-    console.log(this.state.height);
-    sortedBooks = this.state.books.sort((a, b) => {
-      if (this.state.sort === "Newest") {
-        //if same yr
-        if (
-          b.volumeInfo.publishedDate.substring(0, 4) ===
-          a.volumeInfo.publishedDate.substring(0, 4)
-        ) {
-          if (a.volumeInfo.publishedDate.length === 4) {
-            return 1;
-          } else if (b.volumeInfo.publishedDate.length === 4) {
-            return -1;
-          } else if (
-            b.volumeInfo.publishedDate.substring(5, 7) ===
-            a.volumeInfo.publishedDate.substring(5, 7)
-          ) {
-            return (
-              parseInt(b.volumeInfo.publishedDate.substring(8, 10)) -
-              parseInt(a.volumeInfo.publishedDate.substring(8, 10))
-            );
-          }
-          return (
-            parseInt(b.volumeInfo.publishedDate.substring(5, 7)) -
-            parseInt(a.volumeInfo.publishedDate.substring(5, 7))
-          );
-        }
-        return (
-          parseInt(b.volumeInfo.publishedDate.substring(0, 4)) -
-          parseInt(a.volumeInfo.publishedDate.substring(0, 4))
-        );
-        ///end
-      } else if (this.state.sort === "Oldest") {
-        //first check if year is the same
-        //then month
-        if (
-          a.volumeInfo.publishedDate.substring(0, 4) ===
-          b.volumeInfo.publishedDate.substring(0, 4)
-        ) {
-          if (b.volumeInfo.publishedDate.length === 4) {
-            return 1;
-          } else if (a.volumeInfo.publishedDate.length === 4) {
-            return -1;
-          } else if (
-            a.volumeInfo.publishedDate.substring(5, 7) ===
-            b.volumeInfo.publishedDate.substring(5, 7)
-          ) {
-            return (
-              parseInt(a.volumeInfo.publishedDate.substring(8, 10)) -
-              parseInt(b.volumeInfo.publishedDate.substring(8, 10))
-            );
-          }
-          return (
-            parseInt(a.volumeInfo.publishedDate.substring(5, 7)) -
-            parseInt(b.volumeInfo.publishedDate.substring(5, 7))
-          );
-        }
-        return (
-          parseInt(a.volumeInfo.publishedDate.substring(0, 4)) -
-          parseInt(b.volumeInfo.publishedDate.substring(0, 4))
-        );
-      }
-    });
-
     return (
       <div>
         <SearchArea
           searchBook={this.searchBook}
           handleSearch={this.handleSearch}
-          handleSort={this.handleSort}
           handleHeight={this.handleHeight}
         ></SearchArea>
-        {this.state.authors.map((author) => (
-          <div>
-            <a>{author}</a>
-          </div>
-        ))}
-        <BookList books={sortedBooks} />
+
+        <BookList books={this.state.books} />
       </div>
     );
   }
